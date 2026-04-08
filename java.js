@@ -1,9 +1,8 @@
-/* ── BussNå – java.js ──────────────────────────── */
-// Uses sql.js (WebAssembly SQLite) to read/write the local database.db
-// Loaded dynamically so the app works offline-first.
+const express = require('express');
+const app = express();
 
 let db = null;
-let currentUser = null; // { id, username } or null (guest)
+let currentUser = null; 
 let currentStopId = null;
 let departureTimers = {};
 let allStops = [];
@@ -411,7 +410,7 @@ function escHtml(str) {
 }
 
 // ── BOOTSTRAP ────────────────────────────────────
-(async function() {
+/*(async function() {
     // Inject sql.js from CDN
     await new Promise((res, rej) => {
         const s = document.createElement('script');
@@ -420,4 +419,15 @@ function escHtml(str) {
         document.head.appendChild(s);
     });
     await initDB();
-})();
+    /*/
+
+
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello from Express!');
+});
+
+app.listen(port, () => {
+  console.log(`Express server running at http://localhost:${port}`);
+});
