@@ -6,7 +6,9 @@ let currentUser = null;
 let currentStopId = null;
 let departureTimers = {};
 let allStops = [];
-
+window.addEventListener('DOMContentLoaded', async () => {
+    await initDB();
+});
 // ── INIT ─────────────────────────────────────────
 async function initDB() {
     const SQL = await initSqlJs({
@@ -18,71 +20,16 @@ async function initDB() {
         const resp = await fetch('database.db');
         if (resp.ok) {
             const buf = await resp.arrayBuffer();
-            db = new SQL.Database(new Uint8Array(buf));
         } else {
             throw new Error('no file');
         }
     } catch {
-        db = new SQL.Database();
-    }
 
-    ensureSchema();
+    }
     console.log('DB ready');
 }
 
-function ensureSchema() {
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        password VARCHAR(255) NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS bus_stops (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR(100) NOT NULL,
-        latitude DECIMAL(9,6),
-        longitude DECIMAL(9,6)
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS buses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        line_number VARCHAR(10),
-        driver_name VARCHAR(100)
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS user_favorites (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INT NOT NULL,
-        bus_stop_id INT NOT NULL,
-        UNIQUE(user_id, bus_stop_id)
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS AVgang (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        avgang INT NOT NULL,
-        line_number INT NOT NULL,
-        stop_id INT,
-        created_at INTEGER DEFAULT (strftime('%s','now'))
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS bus_positions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        bus_id INT NOT NULL,
-        latitude DECIMAL(9,6),
-        longitude DECIMAL(9,6),
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`);
-}
 
-function query(sql, params = []) {
-    try {
-        const stmt = db.prepare(sql);
-        stmt.bind(params);
-        const rows = [];
-        while (stmt.step()) rows.push(stmt.getAsObject());
-        stmt.free();
-        return rows;
-    } catch(e) {
-        console.error('DB error:', e, sql);
-        return [];
-    }
-}
 
 function run(sql, params = []) {
     try { db.run(sql, params); return true; }
@@ -123,22 +70,36 @@ function register() {
     const password = document.getElementById('regPass').value;
     const errEl    = document.getElementById('regError');
     const okEl     = document.getElementById('regSuccess');
-    errEl.textContent = ''; okEl.textContent = '';
 
-    if (!username || !email || !password) { errEl.textContent = 'Fyll inn alle felt.'; return; }
-    if (password.length < 4) { errEl.textContent = 'Passord må ha minst 4 tegn.'; return; }
+    errEl.textContent = '';
+    okEl.textContent = '';
+    
+    if (!username || !email || !password) {
+        errEl.textContent = 'Fyll inn alle felt.';
+        return;
+    }
 
-    const exists = query('SELECT id FROM users WHERE username = ?', [username]);
-    if (exists.length > 0) { errEl.textContent = 'Brukernavnet er tatt.'; return; }
+    if (password.length < 4) {
+        errEl.textContent = 'Passord må ha minst 4 tegn.';
+        return;
+    }
 
-    run('INSERT INTO users (username, email, password) VALUES (?,?,?)', [username, email, password]);
+    if (!success) {
+        errEl.textContent = 'Noe gikk galt.';
+        return;
+    }
+
     okEl.textContent = '✓ Konto opprettet! Logger inn…';
+
     setTimeout(() => {
-        currentUser = { id: lastInsertId() || query('SELECT id FROM users WHERE username=?',[username])[0]?.id, username };
+        const id = lastInsertId() || query(
+            'SELECT id FROM users WHERE username=?',[username]
+        )[0]?.id;
+
+        currentUser = { id, username };
         enterApp();
     }, 900);
 }
-
 function guestLogin() {
     currentUser = null;
     enterApp();
@@ -421,6 +382,7 @@ function escHtml(str) {
     await initDB();
     /*/
 
+window.onload(initDB);
 
 const port = 3000;
 
