@@ -4,8 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="m.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    
+    <div id="app">
+
+        <!-- AUTH SCREEN -->
+        <div id="authScreen" class="screen active">
+            <div class="auth-bg">
+                <div class="auth-blob b1"></div>
+                <div class="auth-blob b2"></div>
+            </div>
+            <div class="auth-card">
+                <div class="logo">
+                    <span class="logo-icon">🚌</span>
+                    <h1>BussNå</h1>
+                    <p class="tagline">Sanntid. Enkelt. Ditt.</p>
+                </div>
+
+                <div class="tab-switch">
+                    <button class="tab-btn active" onclick="showTab('login')">Logg inn</button>
+                    <button class="tab-btn" onclick="showTab('register')">Registrer</button>
+                </div>
+
+                <!-- LOGIN -->
+                <div id="loginTab" class="form-section active">
+                    <div class="input-group">
+                        <label>Brukernavn</label>
+                        <input type="text" id="loginUser" placeholder="ditt brukernavn">
+                    </div>
+                    <div class="input-group">
+                        <label>Passord</label>
+                        <input type="password" id="loginPass" placeholder="••••••••">
+                    </div>
+                    <div id="loginError" class="error-msg"></div>
+                    <button class="btn-primary" onclick="login()">Logg inn</button>
+                    <button class="btn-ghost" onclick="guestLogin()">Fortsett som gjest</button>
+                </div>
+
+                <!-- REGISTER -->
+                <div id="registerTab" class="form-section">
+                    <div class="input-group">
+                        <label>Brukernavn</label>
+                        <input type="text" id="regUser" placeholder="velg brukernavn">
+                    </div>
+                    <div class="input-group">
+                        <label>E-post</label>
+                        <input type="email" id="regEmail" placeholder="din@epost.no">
+                    </div>
+                    <div class="input-group">
+                        <label>Passord</label>
+                        <input type="password" id="regPass" placeholder="••••••••">
+                    </div>
+                    <div id="regError" class="error-msg"></div>
+                    <div id="regSuccess" class="success-msg"></div>
+                    <button class="btn-primary" onclick="register()">Opprett konto</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN APP -->
+        <div id="mainScreen" class="screen">
+            <!-- TOP BAR -->
+            <header>
+                <div class="header-left">
+                    <span class="logo-sm">🚌 BussNå</span>
+                </div>
+                <div class="header-right">
+                    <span id="headerUser" class="user-badge"></span>
+                    <button class="icon-btn" onclick="logout()" title="Logg ut">✕</button>
+                </div>
+            </header>
+
+            <!-- SEARCH -->
+            <div class="search-section">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="stopSearch" placeholder="Søk etter holdeplass..." oninput="filterStops()" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- FAVORITES -->
+            <section class="section" id="favSection">
+                <h2 class="section-title">⭐ Mine favoritter</h2>
+                <div id="favList" class="stop-list"></div>
+                <p id="favEmpty" class="empty-hint">Ingen favoritter ennå — legg til en holdeplass!</p>
+            </section>
+
+            <!-- ALL STOPS -->
+            <section class="section">
+                <h2 class="section-title">🗺 Alle holdeplasser</h2>
+                <div id="stopList" class="stop-list"></div>
+            </section>
+
+            <!-- ADD STOP -->
+            <section class="section admin-section">
+                <h2 class="section-title">➕ Legg til holdeplass</h2>
+                <div class="add-form">
+                    <input type="text" id="newStopName" placeholder="Navn på holdeplass">
+                    <div class="coord-row">
+                        <input type="number" id="newStopLat" placeholder="Breddegrad" step="0.000001">
+                        <input type="number" id="newStopLng" placeholder="Lengdegrad" step="0.000001">
+                    </div>
+                    <button class="btn-primary" onclick="addStop()">Legg til</button>
+                </div>
+            </section>
+
+            <!-- ADD BUS -->
+            <section class="section admin-section">
+                <h2 class="section-title">🚌 Legg til buss</h2>
+                <div class="add-form">
+                    <input type="text" id="newBusLine" placeholder="Linjenummer (f.eks. 3)">
+                    <input type="text" id="newBusDriver" placeholder="Sjåfør navn">
+                    <button class="btn-primary" onclick="addBus()">Legg til</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- DEPARTURE MODAL -->
+        <div id="modal" class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <div>
+                        <h2 id="modalStopName"></h2>
+                        <p class="modal-sub" id="modalCoords"></p>
+                    </div>
+                    <button class="icon-btn" onclick="closeModalDirect()">✕</button>
+                </div>
+
+                <div class="live-badge">
+                    <span class="pulse-dot"></span> SANNTID
+                </div>
+
+                <div id="departures" class="departure-list"></div>
+                <p id="depEmpty" class="empty-hint" style="display:none">Ingen avganger registrert.</p>
+
+                <div class="modal-actions">
+                    <button id="favBtn" class="btn-outline" onclick="toggleFavorite()"></button>
+                </div>
+
+                <div class="add-departure-section">
+                    <h3>+ Legg til avgang</h3>
+                    <div class="dep-form">
+                        <select id="depBusSelect">
+                            <option value="">Velg buss...</option>
+                        </select>
+                        <input type="number" id="depMinutes" placeholder="Minutter til ankomst" min="0">
+                        <button class="btn-primary sm" onclick="addDeparture()">Legg til</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="java.js"></script>
 </body>
 </html>
