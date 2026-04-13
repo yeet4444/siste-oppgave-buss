@@ -8,6 +8,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+<script>
+let currentUser = null;
+
+// fake users (so login works)
+const users = [
+    { id: 1, username: "admin", password: "1234" },
+    { id: 2, username: "test", password: "1234" }
+];
+
+function login1() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginError');
+
+    errEl.textContent = '';
+
+    if (!username || !password) {
+        errEl.textContent = 'Fyll inn brukernavn og passord.';
+        return;
+    }
+
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (!user) {
+        errEl.textContent = 'Feil brukernavn eller passord.';
+        return;
+    }
+
+    currentUser = user;
+
+    window.location.href = "/main.html";
+}
+
+function enterApp() {
+    window.location.href = "/main.html";
+}
+</script>
     <div id="app">
 
         <!-- AUTH SCREEN -->
@@ -39,7 +76,7 @@
                         <input type="password" id="loginPass" placeholder="••••••••">
                     </div>
                     <div id="loginError" class="error-msg"></div>
-                    <button class="btn-primary" onclick="login()">Logg inn</button>
+                    <button class="btn-primary" onclick="login1()">logg inn</button>
                     <button class="btn-ghost" onclick="guestLogin()">Fortsett som gjest</button>
                 </div>
 
@@ -159,5 +196,6 @@
 
     </div>
     <script src="java.js"></script>
+
 </body>
 </html>

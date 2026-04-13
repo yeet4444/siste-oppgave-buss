@@ -1,14 +1,12 @@
 const express = require('express');
 const app = express();
-
+const path = require('path');
 let db = null;
 let currentUser = null; 
 let currentStopId = null;
 let departureTimers = {};
 let allStops = [];
-window.addEventListener('DOMContentLoaded', async () => {
-    await initDB();
-});
+
 // ── INIT ─────────────────────────────────────────
 async function initDB() {
     const SQL = await initSqlJs({
@@ -49,7 +47,7 @@ function showTab(tab) {
     document.getElementById('registerTab').classList.toggle('active', tab === 'register');
 }
 
-function login() {
+function login1() {
     const username = document.getElementById('loginUser').value.trim();
     const password = document.getElementById('loginPass').value;
     const errEl = document.getElementById('loginError');
@@ -101,8 +99,9 @@ function register() {
     }, 900);
 }
 function guestLogin() {
+    console.log('Logging in as guest');
     currentUser = null;
-    enterApp();
+    window.location.href = "public/main.html";
 }
 
 function logout() {
@@ -116,11 +115,8 @@ function logout() {
 }
 
 function enterApp() {
-    document.getElementById('authScreen').classList.remove('active');
-    document.getElementById('mainScreen').classList.add('active');
-    document.getElementById('headerUser').textContent = currentUser ? '👤 ' + currentUser.username : 'Gjest';
-    renderStops();
-    renderFavorites();
+   // localStorage.setItem("user", JSON.stringify(currentUser));
+    window.location.href = "main.html";
 }
 
 // ── STOPS ────────────────────────────────────────
@@ -370,26 +366,11 @@ function escHtml(str) {
         .replace(/"/g,'&quot;');
 }
 
-// ── BOOTSTRAP ────────────────────────────────────
-/*(async function() {
-    // Inject sql.js from CDN
-    await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-    });
-    await initDB();
-    /*/
-
-window.onload(initDB);
 
 const port = 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello from Express!');
-});
+// 🔥 THIS is what you need
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(port, () => {
-  console.log(`Express server running at http://localhost:${port}`);
-});
+  console.log(`Express server running at http://localhost:${port}`)});
